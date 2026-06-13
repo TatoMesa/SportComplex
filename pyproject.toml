@@ -1,0 +1,53 @@
+[project]
+name = "sportcomplex"
+version = "0.1.0"
+requires-python = ">=3.13"
+dependencies = [
+    # Django core
+    "django>=5.1",
+    "django-allauth>=65.0",
+    "django-crispy-forms>=2.3",
+    "crispy-tailwind>=1.0",
+    "django-htmx>=1.21",
+    "whitenoise>=6.8",
+
+    # Base de datos
+    "psycopg[binary]>=3.2",
+    "dj-database-url>=2.3",
+    "django-extensions>=3.2",
+
+    # Tareas asíncronas
+    "celery[redis]>=5.4",
+    "django-celery-beat>=2.7",
+    "redis>=5.0",
+
+    # Seguridad
+    "django-ratelimit>=4.1",
+
+    # Utils
+    "Pillow>=11.0",
+    "python-decouple>=3.8",
+]
+
+[dependency-groups]
+dev = [
+    "django-debug-toolbar>=4.4",
+    "factory-boy>=3.3",
+    "faker>=33.0",
+    "pytest-django>=4.9",
+    "pytest-cov>=6.0",
+    "ruff>=0.8",
+    "ipython>=8.0",
+]
+
+[tool.ruff]
+line-length = 88
+target-version = "py313"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W", "UP"]
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "config.settings.development"
+python_files = ["test_*.py", "*_test.py"]
+addopts = "--cov=apps --cov-report=term-missing"
