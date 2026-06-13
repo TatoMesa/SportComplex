@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{% block title %}Iniciar sesión — SportComplex{% endblock %}
+
+{% block body %}
+<div class="min-h-screen flex items-center justify-center px-4">
+  <div class="w-full max-w-md">
+
+    {# Logo / marca #}
+    <div class="text-center mb-8">
+      <h1 class="text-3xl font-bold text-gray-900">SportComplex</h1>
+      <p class="mt-2 text-gray-500 text-sm">Gestión de complejos deportivos</p>
+    </div>
+
+    {# Card #}
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 px-8 py-10">
+      <h2 class="text-xl font-semibold text-gray-900 mb-6">Iniciar sesión</h2>
+
+      <form method="post" action="{% url 'account_login' %}" class="space-y-5">
+        {% csrf_token %}
+
+        {# Email #}
+        <div>
+          <label for="id_login" class="block text-sm font-medium text-gray-700 mb-1">
+            Email
+          </label>
+          <input
+            type="email"
+            name="login"
+            id="id_login"
+            autocomplete="email"
+            required
+            class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm text-gray-900
+                   placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500
+                   focus:border-transparent transition"
+            placeholder="tu@email.com"
+          >
+        </div>
+
+        {# Password #}
+        <div>
+          <div class="flex items-center justify-between mb-1">
+            <label for="id_password" class="block text-sm font-medium text-gray-700">
+              Contraseña
+            </label>
+            <a href="{% url 'account_reset_password' %}"
+               class="text-xs text-primary-600 hover:text-primary-700">
+              ¿Olvidaste tu contraseña?
+            </a>
+          </div>
+          <input
+            type="password"
+            name="password"
+            id="id_password"
+            autocomplete="current-password"
+            required
+            class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm text-gray-900
+                   placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500
+                   focus:border-transparent transition"
+            placeholder="••••••••"
+          >
+        </div>
+
+        {# Errores #}
+        {% if form.errors %}
+          <div class="rounded-lg bg-red-50 border border-red-100 px-4 py-3 text-sm text-red-700">
+            Email o contraseña incorrectos.
+          </div>
+        {% endif %}
+
+        {# Submit #}
+        <button
+          type="submit"
+          class="w-full rounded-lg bg-primary-600 px-4 py-2.5 text-sm font-semibold
+                 text-white hover:bg-primary-700 focus:outline-none focus:ring-2
+                 focus:ring-primary-500 focus:ring-offset-2 transition"
+        >
+          Ingresar
+        </button>
+      </form>
+    </div>
+
+    {# Registro #}
+    <p class="text-center mt-6 text-sm text-gray-500">
+      ¿No tenés cuenta?
+      <a href="{% url 'account_signup' %}" class="text-primary-600 font-medium hover:text-primary-700">
+        Registrate
+      </a>
+    </p>
+
+  </div>
+</div>
+{% endblock %}
