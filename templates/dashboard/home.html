@@ -1,0 +1,38 @@
+{% extends "layouts/app.html" %}
+
+{% block page_title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
+
+  {% for card in stats %}
+  <div class="bg-white rounded-xl border border-gray-100 p-5">
+    <p class="text-sm text-gray-500 font-medium">{{ card.label }}</p>
+    <p class="text-2xl font-bold text-gray-900 mt-1">{{ card.value }}</p>
+  </div>
+  {% empty %}
+  {# Cards de ejemplo hasta que haya datos reales #}
+  <div class="bg-white rounded-xl border border-gray-100 p-5">
+    <p class="text-sm text-gray-500 font-medium">Complejos activos</p>
+    <p class="text-2xl font-bold text-gray-900 mt-1">—</p>
+  </div>
+  <div class="bg-white rounded-xl border border-gray-100 p-5">
+    <p class="text-sm text-gray-500 font-medium">Reservas hoy</p>
+    <p class="text-2xl font-bold text-gray-900 mt-1">—</p>
+  </div>
+  <div class="bg-white rounded-xl border border-gray-100 p-5">
+    <p class="text-sm text-gray-500 font-medium">Usuarios activos</p>
+    <p class="text-2xl font-bold text-gray-900 mt-1">—</p>
+  </div>
+  <div class="bg-white rounded-xl border border-gray-100 p-5">
+    <p class="text-sm text-gray-500 font-medium">Ingresos del mes</p>
+    <p class="text-2xl font-bold text-gray-900 mt-1">—</p>
+  </div>
+  {% endfor %}
+
+</div>
+
+<p class="text-sm text-gray-400 text-center mt-16">
+  El dashboard se completa a medida que se carguen datos.
+</p>
+{% endblock %}

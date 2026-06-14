@@ -1,8 +1,8 @@
 from django.urls import path
-from django.http import HttpResponse
+from .views import DashboardHomeView
 
 app_name = "dashboard"
 
 urlpatterns = [
-    path("", lambda r: HttpResponse("Dashboard OK"), name="home"),
+    path("", DashboardHomeView.as_view(), name="home"),
 ]
