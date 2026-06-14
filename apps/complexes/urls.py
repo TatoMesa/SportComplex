@@ -1,9 +1,12 @@
 from django.urls import path
-from django.contrib.auth.decorators import login_required
-from django.views.generic import TemplateView
+from . import views
 
 app_name = "complexes"
 
 urlpatterns = [
-    path("", login_required(TemplateView.as_view(template_name="coming_soon.html")), name="list"),
+    path("", views.ComplexListView.as_view(), name="list"),
+    path("nuevo/", views.ComplexCreateView.as_view(), name="create"),
+    path("<slug:slug>/", views.ComplexDetailView.as_view(), name="detail"),
+    path("<slug:slug>/editar/", views.ComplexUpdateView.as_view(), name="update"),
+    path("<slug:slug>/canchas/nueva/", views.CourtCreateView.as_view(), name="court_create"),
 ]

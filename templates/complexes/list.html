@@ -1,0 +1,78 @@
+{% extends "layouts/app.html" %}
+
+{% block page_title %}Complejos{% endblock %}
+
+{% block header_actions %}
+  {% if user.is_super_admin or user.is_complex_admin %}
+  <a href="{% url 'complexes:create' %}"
+     class="inline-flex items-center gap-2 rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700 transition">
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+    </svg>
+    Nuevo complejo
+  </a>
+  {% endif %}
+{% endblock %}
+
+{% block content %}
+{% if complexes %}
+  <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+    {% for complex in complexes %}
+    <div class="bg-white rounded-xl border border-gray-100 overflow-hidden hover:shadow-sm transition">
+
+      {# Cover #}
+      <div class="h-32 bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center">
+        {% if complex.logo %}
+          <img src="{{ complex.logo.url }}" alt="{{ complex.name }}" class="h-16 w-16 rounded-full object-cover border-2 border-white">
+        {% else %}
+          <span class="text-white font-bold text-3xl">{{ complex.name|first|upper }}</span>
+        {% endif %}
+      </div>
+
+      <div class="p-5">
+        <div class="flex items-start justify-between mb-1">
+          <h3 class="font-semibold text-gray-900">{{ complex.name }}</h3>
+          <span class="text-xs px-2 py-0.5 rounded-full font-medium
+            {% if complex.status == 'ACTIVE' %}bg-green-50 text-green-700
+            {% elif complex.status == 'SUSPENDED' %}bg-red-50 text-red-700
+            {% else %}bg-yellow-50 text-yellow-700{% endif %}">
+            {{ complex.get_status_display }}
+          </span>
+        </div>
+
+        <p class="text-sm text-gray-500 mb-4">
+          {{ complex.city }}{% if complex.province %}, {{ complex.province }}{% endif %}
+        </p>
+
+        <div class="flex items-center justify-between">
+          <span class="text-xs text-gray-400">
+            {{ complex.courts.count }} cancha{{ complex.courts.count|pluralize }}
+          </span>
+          <a href="{% url 'complexes:detail' complex.slug %}"
+             class="text-sm font-medium text-primary-600 hover:text-primary-700">
+            Ver detalle →
+          </a>
+        </div>
+      </div>
+
+    </div>
+    {% endfor %}
+  </div>
+
+{% else %}
+  <div class="flex flex-col items-center justify-center h-64 text-center">
+    <div class="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mb-4">
+      <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+              d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+      </svg>
+    </div>
+    <p class="text-gray-500 font-medium mb-1">No hay complejos todavía</p>
+    <p class="text-gray-400 text-sm mb-4">Creá el primero para empezar</p>
+    <a href="{% url 'complexes:create' %}"
+       class="inline-flex items-center gap-2 rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700 transition">
+      Crear complejo
+    </a>
+  </div>
+{% endif %}
+{% endblock %}

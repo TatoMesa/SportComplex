@@ -1,0 +1,83 @@
+{% extends "layouts/app.html" %}
+
+{% block page_title %}{{ complex.name }}{% endblock %}
+
+{% block header_actions %}
+  <a href="{% url 'complexes:update' complex.slug %}"
+     class="inline-flex items-center gap-2 rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 transition">
+    Editar
+  </a>
+  <a href="{% url 'complexes:court_create' complex.slug %}"
+     class="inline-flex items-center gap-2 rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700 transition">
+    + Nueva cancha
+  </a>
+{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+  {# Info del complejo #}
+  <div class="bg-white rounded-xl border border-gray-100 p-6">
+    <div class="flex items-start gap-4">
+      <div class="w-14 h-14 rounded-xl bg-primary-100 flex items-center justify-center flex-shrink-0">
+        <span class="text-primary-700 font-bold text-xl">{{ complex.name|first|upper }}</span>
+      </div>
+      <div class="flex-1">
+        <div class="flex items-center gap-3 mb-1">
+          <h2 class="text-lg font-semibold text-gray-900">{{ complex.name }}</h2>
+          <span class="text-xs px-2 py-0.5 rounded-full font-medium
+            {% if complex.status == 'ACTIVE' %}bg-green-50 text-green-700
+            {% elif complex.status == 'SUSPENDED' %}bg-red-50 text-red-700
+            {% else %}bg-yellow-50 text-yellow-700{% endif %}">
+            {{ complex.get_status_display }}
+          </span>
+        </div>
+        <p class="text-sm text-gray-500">{{ complex.address }}, {{ complex.city }}</p>
+        {% if complex.description %}
+          <p class="text-sm text-gray-600 mt-2">{{ complex.description }}</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  {# Canchas #}
+  <div>
+    <h3 class="font-medium text-gray-900 mb-3">Canchas ({{ courts.count }})</h3>
+
+    {% if courts %}
+      <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+        {% for court in courts %}
+        <div class="bg-white rounded-xl border border-gray-100 p-4">
+          <div class="flex items-start justify-between mb-2">
+            <div>
+              <p class="font-medium text-gray-900 text-sm">{{ court.name }}</p>
+              <p class="text-xs text-gray-500 mt-0.5">{{ court.sport.name }}</p>
+            </div>
+            <span class="text-xs px-2 py-0.5 rounded-full
+              {% if court.is_active %}bg-green-50 text-green-700{% else %}bg-gray-100 text-gray-500{% endif %}">
+              {% if court.is_active %}Activa{% else %}Inactiva{% endif %}
+            </span>
+          </div>
+          <div class="flex items-center justify-between mt-3 pt-3 border-t border-gray-50">
+            <span class="text-sm font-semibold text-gray-900">${{ court.price_per_hour }}/h</span>
+            <div class="flex items-center gap-2 text-xs text-gray-400">
+              {% if court.is_indoor %}<span>Cubierta</span>{% endif %}
+              {% if court.surface %}<span>{{ court.get_surface_display }}</span>{% endif %}
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="bg-white rounded-xl border border-dashed border-gray-200 p-8 text-center">
+        <p class="text-gray-400 text-sm mb-3">No hay canchas cargadas todavía</p>
+        <a href="{% url 'complexes:court_create' complex.slug %}"
+           class="text-sm font-medium text-primary-600 hover:text-primary-700">
+          Agregar la primera cancha →
+        </a>
+      </div>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}
