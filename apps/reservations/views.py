@@ -158,6 +158,7 @@ class ConfirmPaymentView(LoginRequiredMixin, View):
     """El admin del complejo confirma el pago de una reserva."""
 
     def post(self, request, pk):
+        from django.utils import timezone
         reservation = get_object_or_404(Reservation, pk=pk)
         user = request.user
 
@@ -167,20 +168,19 @@ class ConfirmPaymentView(LoginRequiredMixin, View):
 
         form = PaymentForm(request.POST)
         if form.is_valid():
-            payment, created = Payment.objects.get_or_create(reservation=reservation)
-            payment.amount = form.cleaned_data["amount"]
-            payment.method = form.cleaned_data["method"]
-            payment.status = PaymentStatus.PAID
-            payment.notes = form.cleaned_data["notes"]
-            from django.utils import timezone
-            payment.paid_at = timezone.now()
-            payment.save()
-
+            Payment.objects.filter(reservation=reservation).delete()
+            Payment.objects.create(
+                reservation=reservation,
+                amount=form.cleaned_data["amount"],
+                method=form.cleaned_data["method"],
+                status=PaymentStatus.PAID,
+                notes=form.cleaned_data["notes"],
+                paid_at=timezone.now(),
+            )
             reservation.status = ReservationStatus.CONFIRMED
             reservation.save()
-
             messages.success(request, "Pago confirmado. Reserva confirmada.")
         else:
-            messages.error(request, "Error al confirmar el pago.")
+            messages.error(request, f"Error: {form.errors}")
 
         return redirect("reservations:detail", pk=pk)

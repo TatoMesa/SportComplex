@@ -3,36 +3,122 @@
 {% block page_title %}Dashboard{% endblock %}
 
 {% block content %}
-<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
 
-  {% for card in stats %}
+{# ── Stats cards ── #}
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+  {% for stat in stats %}
   <div class="bg-white rounded-xl border border-gray-100 p-5">
-    <p class="text-sm text-gray-500 font-medium">{{ card.label }}</p>
-    <p class="text-2xl font-bold text-gray-900 mt-1">{{ card.value }}</p>
-  </div>
-  {% empty %}
-  {# Cards de ejemplo hasta que haya datos reales #}
-  <div class="bg-white rounded-xl border border-gray-100 p-5">
-    <p class="text-sm text-gray-500 font-medium">Complejos activos</p>
-    <p class="text-2xl font-bold text-gray-900 mt-1">—</p>
-  </div>
-  <div class="bg-white rounded-xl border border-gray-100 p-5">
-    <p class="text-sm text-gray-500 font-medium">Reservas hoy</p>
-    <p class="text-2xl font-bold text-gray-900 mt-1">—</p>
-  </div>
-  <div class="bg-white rounded-xl border border-gray-100 p-5">
-    <p class="text-sm text-gray-500 font-medium">Usuarios activos</p>
-    <p class="text-2xl font-bold text-gray-900 mt-1">—</p>
-  </div>
-  <div class="bg-white rounded-xl border border-gray-100 p-5">
-    <p class="text-sm text-gray-500 font-medium">Ingresos del mes</p>
-    <p class="text-2xl font-bold text-gray-900 mt-1">—</p>
+    <p class="text-sm text-gray-500 font-medium mb-1">{{ stat.label }}</p>
+    <p class="text-2xl font-bold text-gray-900">
+      {% if stat.prefix %}{{ stat.prefix }}{% endif %}{{ stat.value }}
+    </p>
   </div>
   {% endfor %}
-
 </div>
 
-<p class="text-sm text-gray-400 text-center mt-16">
-  El dashboard se completa a medida que se carguen datos.
-</p>
+{# ── Complejos (solo admin de complejo) ── #}
+{% if role == "complex_admin" and my_complexes %}
+<div class="mb-8">
+  <h2 class="text-sm font-medium text-gray-500 uppercase tracking-wide mb-3">
+    Mis complejos
+  </h2>
+  <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+    {% for c in my_complexes %}
+    <a href="{% url 'complexes:detail' c.slug %}"
+       class="bg-white rounded-xl border border-gray-100 p-4 hover:shadow-sm transition flex items-center gap-4">
+      <div class="w-10 h-10 rounded-lg bg-primary-100 flex items-center justify-center flex-shrink-0">
+        <span class="text-primary-700 font-bold">{{ c.name|first|upper }}</span>
+      </div>
+      <div class="flex-1 min-w-0">
+        <p class="font-medium text-gray-900 truncate">{{ c.name }}</p>
+        <p class="text-xs text-gray-400 mt-0.5">
+          {{ c.total_courts }} cancha{{ c.total_courts|pluralize }}
+        </p>
+      </div>
+      <span class="text-xs px-2 py-0.5 rounded-full
+        {% if c.status == 'ACTIVE' %}bg-green-50 text-green-700
+        {% else %}bg-yellow-50 text-yellow-700{% endif %}">
+        {{ c.get_status_display }}
+      </span>
+    </a>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+{# ── Reservas recientes ── #}
+<div>
+  <div class="flex items-center justify-between mb-3">
+    <h2 class="text-sm font-medium text-gray-500 uppercase tracking-wide">
+      Reservas recientes
+    </h2>
+    <a href="{% url 'reservations:list' %}"
+       class="text-sm text-primary-600 hover:text-primary-700 font-medium">
+      Ver todas →
+    </a>
+  </div>
+
+  {% if recent_reservations %}
+  <div class="bg-white rounded-xl border border-gray-100 overflow-hidden">
+    <table class="w-full text-sm">
+      <thead>
+        <tr class="border-b border-gray-100 bg-gray-50">
+          <th class="text-left px-5 py-3 font-medium text-gray-500">Cancha</th>
+          {% if role != "end_user" %}
+          <th class="text-left px-5 py-3 font-medium text-gray-500">Usuario</th>
+          {% endif %}
+          <th class="text-left px-5 py-3 font-medium text-gray-500">Fecha</th>
+          <th class="text-left px-5 py-3 font-medium text-gray-500">Horario</th>
+          <th class="text-left px-5 py-3 font-medium text-gray-500">Total</th>
+          <th class="text-left px-5 py-3 font-medium text-gray-500">Estado</th>
+          <th class="px-5 py-3"></th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-50">
+        {% for r in recent_reservations %}
+        <tr class="hover:bg-gray-50 transition">
+          <td class="px-5 py-3.5">
+            <p class="font-medium text-gray-900">{{ r.court.name }}</p>
+            <p class="text-xs text-gray-400">{{ r.court.complex.name }}</p>
+          </td>
+          {% if role != "end_user" %}
+          <td class="px-5 py-3.5 text-gray-600 text-xs">{{ r.user.email }}</td>
+          {% endif %}
+          <td class="px-5 py-3.5 text-gray-600">{{ r.date|date:"d/m/Y" }}</td>
+          <td class="px-5 py-3.5 text-gray-600">
+            {{ r.start_time|time:"H:i" }} – {{ r.end_time|time:"H:i" }}
+          </td>
+          <td class="px-5 py-3.5 font-medium text-gray-900">${{ r.total_amount }}</td>
+          <td class="px-5 py-3.5">
+            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium
+              {% if r.status == 'CONFIRMED' %}bg-green-50 text-green-700
+              {% elif r.status == 'CANCELLED' %}bg-red-50 text-red-700
+              {% elif r.status == 'COMPLETED' %}bg-blue-50 text-blue-700
+              {% else %}bg-yellow-50 text-yellow-700{% endif %}">
+              {{ r.get_status_display }}
+            </span>
+          </td>
+          <td class="px-5 py-3.5 text-right">
+            <a href="{% url 'reservations:detail' r.pk %}"
+               class="text-primary-600 hover:text-primary-700 font-medium text-xs">
+              Ver
+            </a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% else %}
+  <div class="bg-white rounded-xl border border-gray-100 p-10 text-center">
+    <p class="text-gray-400 text-sm">No hay reservas todavía.</p>
+    <a href="{% url 'reservations:create' %}"
+       class="inline-block mt-3 text-sm font-medium text-primary-600 hover:text-primary-700">
+      Crear la primera →
+    </a>
+  </div>
+  {% endif %}
+</div>
+
 {% endblock %}
