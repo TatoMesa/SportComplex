@@ -1,9 +1,13 @@
 from django.urls import path
-from django.contrib.auth.decorators import login_required
-from django.views.generic import TemplateView
+from . import views
 
 app_name = "reservations"
 
 urlpatterns = [
-    path("", login_required(TemplateView.as_view(template_name="coming_soon.html")), name="list"),
+    path("", views.ReservationListView.as_view(), name="list"),
+    path("nueva/", views.ReservationCreateView.as_view(), name="create"),
+    path("nueva/<slug:slug>/", views.ReservationCreateView.as_view(), name="create_for_complex"),
+    path("<uuid:pk>/", views.ReservationDetailView.as_view(), name="detail"),
+    path("<uuid:pk>/cancelar/", views.ReservationCancelView.as_view(), name="cancel"),
+    path("<uuid:pk>/pago/", views.ConfirmPaymentView.as_view(), name="confirm_payment"),
 ]

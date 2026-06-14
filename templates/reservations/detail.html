@@ -1,0 +1,106 @@
+{% extends "layouts/app.html" %}
+
+{% block page_title %}Reserva — {{ object.court.name }}{% endblock %}
+
+{% block header_actions %}
+  {% if can_cancel %}
+    <form method="post" action="{% url 'reservations:cancel' object.pk %}"
+          onsubmit="return confirm('¿Cancelar esta reserva?')">
+      {% csrf_token %}
+      <button type="submit"
+              class="rounded-lg border border-red-200 px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 transition">
+        Cancelar reserva
+      </button>
+    </form>
+  {% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl space-y-5">
+
+  {# Info principal #}
+  <div class="bg-white rounded-xl border border-gray-100 p-6">
+    <div class="grid grid-cols-2 gap-4 text-sm">
+      <div>
+        <p class="text-gray-400 mb-0.5">Cancha</p>
+        <p class="font-medium text-gray-900">{{ object.court.name }}</p>
+        <p class="text-gray-500 text-xs">{{ object.court.complex.name }}</p>
+      </div>
+      <div>
+        <p class="text-gray-400 mb-0.5">Deporte</p>
+        <p class="font-medium text-gray-900">{{ object.court.sport.name }}</p>
+      </div>
+      <div>
+        <p class="text-gray-400 mb-0.5">Fecha</p>
+        <p class="font-medium text-gray-900">{{ object.date|date:"l d/m/Y" }}</p>
+      </div>
+      <div>
+        <p class="text-gray-400 mb-0.5">Horario</p>
+        <p class="font-medium text-gray-900">
+          {{ object.start_time|time:"H:i" }} – {{ object.end_time|time:"H:i" }}
+        </p>
+      </div>
+      <div>
+        <p class="text-gray-400 mb-0.5">Usuario</p>
+        <p class="font-medium text-gray-900">{{ object.user.email }}</p>
+      </div>
+      <div>
+        <p class="text-gray-400 mb-0.5">Estado</p>
+        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium
+          {% if object.status == 'CONFIRMED' %}bg-green-50 text-green-700
+          {% elif object.status == 'CANCELLED' %}bg-red-50 text-red-700
+          {% elif object.status == 'COMPLETED' %}bg-blue-50 text-blue-700
+          {% else %}bg-yellow-50 text-yellow-700{% endif %}">
+          {{ object.get_status_display }}
+        </span>
+      </div>
+      <div>
+        <p class="text-gray-400 mb-0.5">Total</p>
+        <p class="font-semibold text-gray-900 text-lg">${{ object.total_amount }}</p>
+      </div>
+    </div>
+    {% if object.notes %}
+      <div class="mt-4 pt-4 border-t border-gray-50">
+        <p class="text-gray-400 text-xs mb-1">Notas</p>
+        <p class="text-sm text-gray-600">{{ object.notes }}</p>
+      </div>
+    {% endif %}
+  </div>
+
+  {# Pago #}
+  {% if user.is_super_admin or user.is_complex_admin %}
+  <div class="bg-white rounded-xl border border-gray-100 p-6">
+    <h3 class="font-medium text-gray-900 mb-4">Confirmar pago</h3>
+
+    {% if object.payment and object.payment.status == 'PAID' %}
+      <div class="flex items-center gap-3 rounded-lg bg-green-50 px-4 py-3 text-sm text-green-700">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+        </svg>
+        Pago confirmado — ${{ object.payment.amount }} ({{ object.payment.get_method_display }})
+      </div>
+    {% else %}
+      <form method="post" action="{% url 'reservations:confirm_payment' object.pk %}"
+            class="space-y-4">
+        {% csrf_token %}
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Monto</label>
+            {{ payment_form.amount }}
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Método</label>
+            {{ payment_form.method }}
+          </div>
+        </div>
+        <button type="submit"
+                class="rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 transition">
+          Confirmar pago
+        </button>
+      </form>
+    {% endif %}
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}

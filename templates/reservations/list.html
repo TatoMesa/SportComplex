@@ -1,0 +1,127 @@
+{% extends "layouts/app.html" %}
+
+{% block page_title %}Reservas{% endblock %}
+
+{% block header_actions %}
+  <a href="{% url 'reservations:create' %}"
+     class="inline-flex items-center gap-2 rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700 transition">
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+    </svg>
+    Nueva reserva
+  </a>
+{% endblock %}
+
+{% block content %}
+
+{# Filtros #}
+<form method="get" class="flex items-center gap-3 mb-6">
+  <select name="status"
+          class="rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500">
+    <option value="">Todos los estados</option>
+    {% for value, label in status_choices %}
+      <option value="{{ value }}" {% if selected_status == value %}selected{% endif %}>
+        {{ label }}
+      </option>
+    {% endfor %}
+  </select>
+
+  <input type="date" name="date"
+         value="{{ request.GET.date }}"
+         class="rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500">
+
+  <button type="submit"
+          class="rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-700 transition">
+    Filtrar
+  </button>
+
+  {% if request.GET %}
+    <a href="{% url 'reservations:list' %}" class="text-sm text-gray-400 hover:text-gray-600">
+      Limpiar
+    </a>
+  {% endif %}
+</form>
+
+{% if reservations %}
+  <div class="bg-white rounded-xl border border-gray-100 overflow-hidden">
+    <table class="w-full text-sm">
+      <thead>
+        <tr class="border-b border-gray-100 bg-gray-50">
+          <th class="text-left px-5 py-3 font-medium text-gray-500">Cancha</th>
+          <th class="text-left px-5 py-3 font-medium text-gray-500">Usuario</th>
+          <th class="text-left px-5 py-3 font-medium text-gray-500">Fecha</th>
+          <th class="text-left px-5 py-3 font-medium text-gray-500">Horario</th>
+          <th class="text-left px-5 py-3 font-medium text-gray-500">Total</th>
+          <th class="text-left px-5 py-3 font-medium text-gray-500">Estado</th>
+          <th class="px-5 py-3"></th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-50">
+        {% for r in reservations %}
+        <tr class="hover:bg-gray-50 transition">
+          <td class="px-5 py-3.5">
+            <p class="font-medium text-gray-900">{{ r.court.name }}</p>
+            <p class="text-xs text-gray-400">{{ r.court.complex.name }}</p>
+          </td>
+          <td class="px-5 py-3.5 text-gray-600">{{ r.user.email }}</td>
+          <td class="px-5 py-3.5 text-gray-600">{{ r.date|date:"d/m/Y" }}</td>
+          <td class="px-5 py-3.5 text-gray-600">
+            {{ r.start_time|time:"H:i" }} – {{ r.end_time|time:"H:i" }}
+          </td>
+          <td class="px-5 py-3.5 font-medium text-gray-900">${{ r.total_amount }}</td>
+          <td class="px-5 py-3.5">
+            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium
+              {% if r.status == 'CONFIRMED' %}bg-green-50 text-green-700
+              {% elif r.status == 'CANCELLED' %}bg-red-50 text-red-700
+              {% elif r.status == 'COMPLETED' %}bg-blue-50 text-blue-700
+              {% elif r.status == 'NO_SHOW' %}bg-gray-100 text-gray-600
+              {% else %}bg-yellow-50 text-yellow-700{% endif %}">
+              {{ r.get_status_display }}
+            </span>
+          </td>
+          <td class="px-5 py-3.5 text-right">
+            <a href="{% url 'reservations:detail' r.pk %}"
+               class="text-primary-600 hover:text-primary-700 font-medium">
+              Ver
+            </a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {# Paginación #}
+  {% if is_paginated %}
+  <div class="flex items-center justify-center gap-2 mt-6">
+    {% if page_obj.has_previous %}
+      <a href="?page={{ page_obj.previous_page_number }}"
+         class="px-3 py-1.5 rounded-lg border border-gray-200 text-sm hover:bg-gray-50">←</a>
+    {% endif %}
+    <span class="text-sm text-gray-500">
+      Página {{ page_obj.number }} de {{ page_obj.num_pages }}
+    </span>
+    {% if page_obj.has_next %}
+      <a href="?page={{ page_obj.next_page_number }}"
+         class="px-3 py-1.5 rounded-lg border border-gray-200 text-sm hover:bg-gray-50">→</a>
+    {% endif %}
+  </div>
+  {% endif %}
+
+{% else %}
+  <div class="flex flex-col items-center justify-center h-64 text-center">
+    <p class="text-gray-500 font-medium mb-1">No hay reservas</p>
+    <p class="text-gray-400 text-sm mb-4">
+      {% if request.GET %}
+        Probá con otros filtros.
+      {% else %}
+        Creá la primera reserva.
+      {% endif %}
+    </p>
+    <a href="{% url 'reservations:create' %}"
+       class="inline-flex items-center gap-2 rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700 transition">
+      Nueva reserva
+    </a>
+  </div>
+{% endif %}
+{% endblock %}
