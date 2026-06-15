@@ -12,6 +12,7 @@ urlpatterns = [
     path("buscar/", include("apps.search.urls", namespace="search")),
     path("productos/", include("apps.products.urls", namespace="products")),
     path("torneos/", include("apps.tournaments.urls", namespace="tournaments")),
+    path("productos/", include("apps.products.urls", namespace="products")),
 ]
 
 if settings.DEBUG:
