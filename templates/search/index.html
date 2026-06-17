@@ -1,0 +1,343 @@
+{% extends "layouts/app.html" %}
+
+{% block page_title %}Buscar canchas{% endblock %}
+{% block subtitle_text %}Encontrá disponibilidad en todos los complejos{% endblock %}
+
+{% block content %}
+
+{# ── Formulario de búsqueda ── #}
+<div class="bg-white dark:bg-gray-900
+            rounded-2xl border border-gray-100 dark:border-gray-800
+            p-5 mb-6">
+
+  <form method="get" class="space-y-4">
+
+    {# Fila 1: deporte + ciudad #}
+    <div class="grid grid-cols-2 gap-3">
+      <div>
+        <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">
+          Deporte
+        </label>
+        <select name="sport"
+                class="w-full rounded-xl border border-gray-200 dark:border-gray-700
+                       bg-white dark:bg-gray-800
+                       text-gray-900 dark:text-white
+                       px-3 py-2.5 text-sm
+                       focus:outline-none focus:ring-2 focus:ring-brand-500 transition">
+          <option value="">Todos</option>
+          {% for sport in sports %}
+            <option value="{{ sport.id }}" {% if request.GET.sport == sport.id|stringformat:"s" %}selected{% endif %}>
+              {{ sport.name }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div>
+        <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">
+          Ciudad
+        </label>
+        <select name="city"
+                class="w-full rounded-xl border border-gray-200 dark:border-gray-700
+                       bg-white dark:bg-gray-800
+                       text-gray-900 dark:text-white
+                       px-3 py-2.5 text-sm
+                       focus:outline-none focus:ring-2 focus:ring-brand-500 transition">
+          <option value="">Todas</option>
+          {% for city in cities %}
+            <option value="{{ city }}" {% if request.GET.city == city %}selected{% endif %}>
+              {{ city }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+
+    {# Fila 2: fecha + horarios #}
+    <div class="grid grid-cols-3 gap-3">
+      <div>
+        <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">
+          Fecha *
+        </label>
+        <input type="date" name="date"
+               value="{{ request.GET.date|default:today }}"
+               min="{{ today }}"
+               class="w-full rounded-xl border border-gray-200 dark:border-gray-700
+                      bg-white dark:bg-gray-800
+                      text-gray-900 dark:text-white
+                      px-3 py-2.5 text-sm
+                      focus:outline-none focus:ring-2 focus:ring-brand-500 transition">
+      </div>
+
+      <div>
+        <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">
+          Desde *
+        </label>
+        <select name="start_time"
+                class="w-full rounded-xl border border-gray-200 dark:border-gray-700
+                       bg-white dark:bg-gray-800
+                       text-gray-900 dark:text-white
+                       px-3 py-2.5 text-sm
+                       focus:outline-none focus:ring-2 focus:ring-brand-500 transition">
+          <option value="">Hora</option>
+          {% for value, label in hour_choices %}
+            <option value="{{ value }}" {% if request.GET.start_time == value %}selected{% endif %}>
+              {{ label }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div>
+        <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">
+          Hasta *
+        </label>
+        <select name="end_time"
+                class="w-full rounded-xl border border-gray-200 dark:border-gray-700
+                       bg-white dark:bg-gray-800
+                       text-gray-900 dark:text-white
+                       px-3 py-2.5 text-sm
+                       focus:outline-none focus:ring-2 focus:ring-brand-500 transition">
+          <option value="">Hora</option>
+          {% for value, label in hour_choices %}
+            <option value="{{ value }}" {% if request.GET.end_time == value %}selected{% endif %}>
+              {{ label }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+
+    {# Precio máximo #}
+    <div class="flex items-end gap-3">
+      <div class="w-48">
+        <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">
+          Precio máximo / hora
+        </label>
+        <input type="number" name="max_price"
+               value="{{ request.GET.max_price }}"
+               placeholder="Sin límite"
+               class="w-full rounded-xl border border-gray-200 dark:border-gray-700
+                      bg-white dark:bg-gray-800
+                      text-gray-900 dark:text-white
+                      px-3 py-2.5 text-sm
+                      focus:outline-none focus:ring-2 focus:ring-brand-500 transition">
+      </div>
+
+      <button type="submit"
+              class="flex-1 rounded-xl bg-gradient-brand px-6 py-2.5
+                     text-sm font-bold text-white
+                     shadow-lg shadow-brand-500/25
+                     hover:shadow-brand-500/40 hover:scale-[1.01]
+                     focus:outline-none focus:ring-2 focus:ring-brand-500
+                     transition-all duration-200">
+        Buscar disponibilidad
+      </button>
+
+      {% if request.GET %}
+        <a href="{% url 'search:index' %}"
+           class="rounded-xl border border-gray-200 dark:border-gray-700 px-4 py-2.5
+                  text-sm font-medium text-gray-500 dark:text-gray-400
+                  hover:bg-gray-50 dark:hover:bg-gray-800 transition">
+          Limpiar
+        </a>
+      {% endif %}
+    </div>
+
+  </form>
+</div>
+
+{% if error %}
+  <div class="rounded-xl bg-red-500/10 border border-red-500/20 px-4 py-3 text-sm text-red-500 font-medium mb-4">
+    {{ error }}
+  </div>
+{% endif %}
+
+{# ── Resultados ── #}
+{% if searched %}
+  <div class="flex items-center justify-between mb-4">
+    <h2 class="text-sm font-bold text-gray-900 dark:text-white">
+      {{ result_count }} cancha{{ result_count|pluralize }}
+      disponible{{ result_count|pluralize }}
+    </h2>
+    <p class="text-xs text-gray-400 dark:text-gray-500">
+      {{ search_date|date:"d/m/Y" }} · {{ start_time }} – {{ end_time }}
+    </p>
+  </div>
+
+  {% if results %}
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+      {% for item in results %}
+      <div class="bg-white dark:bg-gray-900
+                  rounded-2xl border border-gray-100 dark:border-gray-800
+                  overflow-hidden hover:shadow-md hover:border-brand-200 dark:hover:border-brand-500/30
+                  transition group">
+
+        {# Header de la card #}
+        <div class="h-2 bg-gradient-brand"></div>
+
+        <div class="p-5">
+          {# Complejo #}
+          <div class="flex items-start justify-between mb-3">
+            <div class="flex items-center gap-2.5">
+              <div class="w-9 h-9 rounded-xl bg-gradient-brand flex items-center justify-center flex-shrink-0 shadow-sm">
+                <span class="text-white font-black text-sm">{{ item.complex.name|first|upper }}</span>
+              </div>
+              <div>
+                <p class="text-xs font-bold text-gray-900 dark:text-white leading-tight">
+                  {{ item.complex.name }}
+                </p>
+                <p class="text-[10px] text-gray-400 dark:text-gray-500">
+                  {{ item.complex.city }}
+                </p>
+              </div>
+            </div>
+
+            {# Favorito #}
+            <form method="post" action="{% url 'search:toggle_favorite' item.complex.slug %}">
+              {% csrf_token %}
+              <input type="hidden" name="next_url" value="{{ request.get_full_path }}">
+              <button type="submit"
+                      class="p-1.5 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition"
+                      title="{% if item.is_favorite %}Quitar de favoritos{% else %}Agregar a favoritos{% endif %}">
+                {% if item.is_favorite %}
+                  <svg class="w-4 h-4 text-amber-400" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                  </svg>
+                {% else %}
+                  <svg class="w-4 h-4 text-gray-300 dark:text-gray-600 hover:text-amber-400 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                          d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                  </svg>
+                {% endif %}
+              </button>
+            </form>
+          </div>
+
+          {# Cancha info #}
+          <div class="mb-4">
+            <p class="font-bold text-gray-900 dark:text-white text-base">{{ item.court.name }}</p>
+            <div class="flex items-center gap-2 mt-1 flex-wrap">
+              <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold
+                           bg-brand-50 dark:bg-brand-500/10 text-brand-600 dark:text-brand-400">
+                {{ item.sport.name }}
+              </span>
+              {% if item.court.surface %}
+                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold
+                             bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400">
+                  {{ item.court.get_surface_display }}
+                </span>
+              {% endif %}
+              {% if item.court.is_indoor %}
+                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold
+                             bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400">
+                  Cubierta
+                </span>
+              {% endif %}
+              {% if item.is_favorite %}
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold
+                             bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400">
+                  ⭐ Favorito
+                </span>
+              {% endif %}
+            </div>
+          </div>
+
+          {# Precio y acción #}
+          <div class="flex items-center justify-between pt-3 border-t border-gray-50 dark:border-gray-800">
+            <div>
+              <span class="text-2xl font-black text-gray-900 dark:text-white">${{ item.price_per_hour }}</span>
+              <span class="text-xs text-gray-400 dark:text-gray-500">/hora</span>
+            </div>
+            <a href="{% url 'reservations:create_for_complex' item.complex.slug %}?court={{ item.court.id }}&date={{ request.GET.date }}&start_time={{ request.GET.start_time }}&end_time={{ request.GET.end_time }}"
+               class="rounded-xl bg-gradient-brand px-4 py-2 text-xs font-bold text-white
+                      shadow-sm shadow-brand-500/20
+                      hover:shadow-brand-500/40 hover:scale-[1.02]
+                      transition-all duration-200">
+              Reservar
+            </a>
+          </div>
+        </div>
+
+      </div>
+      {% endfor %}
+    </div>
+
+  {% else %}
+    <div class="rounded-2xl bg-white dark:bg-gray-900
+                border border-dashed border-gray-200 dark:border-gray-700
+                p-12 text-center">
+      <div class="w-14 h-14 rounded-2xl bg-gray-50 dark:bg-gray-800 flex items-center justify-center mx-auto mb-4">
+        <svg class="w-7 h-7 text-gray-300 dark:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+      </div>
+      <p class="font-bold text-gray-900 dark:text-white mb-1">Sin disponibilidad</p>
+      <p class="text-sm text-gray-400 dark:text-gray-500">
+        No hay canchas libres para ese horario. Probá otra fecha u hora.
+      </p>
+    </div>
+  {% endif %}
+
+{% elif not searched %}
+  {# Estado inicial — favoritos y accesos rápidos #}
+  {% if favorites %}
+  <div class="mb-6">
+    <h2 class="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-3">
+      Tus favoritos
+    </h2>
+    <div class="flex flex-wrap gap-2">
+      {% for fav in favorites %}
+      <a href="?complex={{ fav.complex.id }}&date={{ today }}"
+         class="inline-flex items-center gap-2 rounded-xl
+                bg-white dark:bg-gray-900
+                border border-gray-100 dark:border-gray-800
+                px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300
+                hover:border-brand-200 dark:hover:border-brand-500/30 transition">
+        <span class="text-amber-400">⭐</span>
+        {{ fav.complex.name }}
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  {# Accesos rápidos por deporte #}
+  <div>
+    <h2 class="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-3">
+      Buscar por deporte
+    </h2>
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+      {% for sport in sports %}
+      <a href="?sport={{ sport.id }}&date={{ today }}"
+         class="flex flex-col items-center justify-center gap-2
+                rounded-2xl bg-white dark:bg-gray-900
+                border border-gray-100 dark:border-gray-800
+                p-5 hover:border-brand-200 dark:hover:border-brand-500/30
+                hover:shadow-sm transition group">
+        <div class="w-12 h-12 rounded-xl bg-brand-50 dark:bg-brand-500/10
+                    flex items-center justify-center
+                    group-hover:bg-brand-100 dark:group-hover:bg-brand-500/20 transition">
+          <span class="text-2xl">
+            {% if sport.name == "Pádel" %}🏓
+            {% elif sport.name == "Tenis" %}🎾
+            {% elif "Fútbol" in sport.name %}⚽
+            {% elif sport.name == "Hockey" %}🏑
+            {% elif sport.name == "Básquet" %}🏀
+            {% elif sport.name == "Vóley" %}🏐
+            {% else %}🏅{% endif %}
+          </span>
+        </div>
+        <span class="text-sm font-semibold text-gray-700 dark:text-gray-300
+                     group-hover:text-brand-600 dark:group-hover:text-brand-400 transition">
+          {{ sport.name }}
+        </span>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+
+{% endif %}
+
+{% endblock %}

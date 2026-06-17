@@ -40,7 +40,7 @@ class ReservationForm(forms.ModelForm):
             "notes": forms.Textarea(attrs={"class": INPUT_CLASS, "rows": 2}),
         }
 
-    def __init__(self, *args, complex=None, **kwargs):
+    def __init__(self, *args, complex=None, initial_data=None, **kwargs):
         super().__init__(*args, **kwargs)
         if complex:
             self.fields["court"].queryset = Court.objects.filter(
@@ -48,6 +48,17 @@ class ReservationForm(forms.ModelForm):
             )
         self.fields["date"].input_formats = ["%Y-%m-%d"]
 
+        # Prellenar desde parámetros GET
+        if initial_data:
+            if initial_data.get("court"):
+                self.fields["court"].initial = initial_data["court"]
+            if initial_data.get("date"):
+                self.fields["date"].initial = initial_data["date"]
+            if initial_data.get("start_time"):
+                self.fields["start_time"].initial = initial_data["start_time"]
+            if initial_data.get("end_time"):
+                self.fields["end_time"].initial = initial_data["end_time"]
+        
         # Si estamos editando, preseleccionar los valores actuales
         if self.instance and self.instance.pk:
             if self.instance.start_time:

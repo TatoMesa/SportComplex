@@ -7,6 +7,7 @@ from django.utils.translation import gettext_lazy as _
 from core.models import BaseModel
 
 
+
 class UserRole(models.TextChoices):
     SUPER_ADMIN = "SUPER_ADMIN", _("Super Administrador")
     COMPLEX_ADMIN = "COMPLEX_ADMIN", _("Administrador de Complejo")
@@ -87,3 +88,30 @@ class Profile(BaseModel):
         if self.avatar:
             return self.avatar.url
         return "/static/img/default-avatar.svg"
+    
+
+class FavoriteComplex(BaseModel):
+    """Complejos favoritos de un usuario — afectan el orden en la búsqueda."""
+
+    user = models.ForeignKey(
+        "accounts.User",
+        on_delete=models.CASCADE,
+        related_name="favorite_complexes",
+        verbose_name=_("usuario"),
+    )
+    complex = models.ForeignKey(
+        "complexes.Complex",
+        on_delete=models.CASCADE,
+        related_name="favorited_by",
+        verbose_name=_("complejo"),
+    )
+    order = models.PositiveSmallIntegerField(_("orden"), default=0)
+
+    class Meta:
+        verbose_name = _("complejo favorito")
+        verbose_name_plural = _("complejos favoritos")
+        ordering = ["order"]
+        unique_together = [("user", "complex")]
+
+    def __str__(self) -> str:
+        return f"{self.user.email} → {self.complex.name}"

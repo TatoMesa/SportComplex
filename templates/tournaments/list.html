@@ -1,0 +1,41 @@
+{% extends "layouts/app.html" %}
+{% block page_title %}Torneos — {{ complex.name }}{% endblock %}
+
+{% block header_actions %}
+  <a href="{% url 'tournaments:create' complex.slug %}"
+     class="inline-flex items-center gap-2 rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700 transition">
+    + Nuevo torneo
+  </a>
+{% endblock %}
+
+{% block content %}
+{% if tournaments %}
+<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+  {% for t in tournaments %}
+  <a href="{% url 'tournaments:detail' complex.slug t.pk %}"
+     class="bg-white rounded-xl border border-gray-100 p-5 hover:shadow-sm transition block">
+    <div class="flex items-start justify-between mb-2">
+      <h3 class="font-semibold text-gray-900">{{ t.name }}</h3>
+      <span class="text-xs px-2 py-0.5 rounded-full font-medium
+        {% if t.status == 'OPEN' %}bg-green-50 text-green-700
+        {% elif t.status == 'IN_PROGRESS' %}bg-blue-50 text-blue-700
+        {% elif t.status == 'FINISHED' %}bg-gray-100 text-gray-600
+        {% else %}bg-yellow-50 text-yellow-700{% endif %}">
+        {{ t.get_status_display }}
+      </span>
+    </div>
+    <p class="text-sm text-gray-500 mb-3">{{ t.sport.name }} · {{ t.get_format_display }}</p>
+    <p class="text-xs text-gray-400">Inicio: {{ t.start_date|date:"d/m/Y" }}</p>
+  </a>
+  {% endfor %}
+</div>
+{% else %}
+<div class="flex flex-col items-center justify-center h-64 text-center">
+  <p class="text-gray-500 font-medium mb-1">No hay torneos todavía</p>
+  <a href="{% url 'tournaments:create' complex.slug %}"
+     class="mt-3 inline-flex items-center gap-2 rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700 transition">
+    Crear el primero
+  </a>
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,20 @@
+{% extends "layouts/app.html" %}
+{% block page_title %}Torneos — Elegir complejo{% endblock %}
+{% block content %}
+<div class="max-w-lg">
+  <p class="text-sm text-gray-500 mb-4">Seleccioná el complejo para ver sus torneos.</p>
+  <div class="space-y-3">
+    {% for c in complexes %}
+    <a href="{% url 'tournaments:list' c.slug %}"
+       class="flex items-center gap-4 bg-white rounded-xl border border-gray-100 p-4 hover:shadow-sm transition">
+      <div class="w-10 h-10 rounded-lg bg-primary-100 flex items-center justify-center">
+        <span class="text-primary-700 font-bold">{{ c.name|first|upper }}</span>
+      </div>
+      <div>
+        <p class="font-medium text-gray-900">{{ c.name }}</p>
+        <p class="text-xs text-gray-400">{{ c.city }}</p>
+      </div>
+    </a>
+    {% endfor %}
+</div>
+{% endblock %}

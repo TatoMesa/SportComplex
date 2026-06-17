@@ -1,0 +1,157 @@
+{% extends "layouts/app.html" %}
+{% block page_title %}{{ object.name }}{% endblock %}
+
+{% block header_actions %}
+  <span class="text-xs px-3 py-1.5 rounded-full font-medium
+    {% if object.status == 'OPEN' %}bg-green-50 text-green-700
+    {% elif object.status == 'IN_PROGRESS' %}bg-blue-50 text-blue-700
+    {% else %}bg-gray-100 text-gray-600{% endif %}">
+    {{ object.get_status_display }}
+  </span>
+{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+  {# Info #}
+  <div class="bg-white rounded-xl border border-gray-100 p-5 text-sm text-gray-600 grid grid-cols-2 md:grid-cols-4 gap-4">
+    <div><p class="text-gray-400 text-xs mb-0.5">Deporte</p><p class="font-medium text-gray-900">{{ object.sport.name }}</p></div>
+    <div><p class="text-gray-400 text-xs mb-0.5">Formato</p><p class="font-medium text-gray-900">{{ object.get_format_display }}</p></div>
+    <div><p class="text-gray-400 text-xs mb-0.5">Inicio</p><p class="font-medium text-gray-900">{{ object.start_date|date:"d/m/Y" }}</p></div>
+    <div><p class="text-gray-400 text-xs mb-0.5">Máx. equipos</p><p class="font-medium text-gray-900">{{ object.max_teams }}</p></div>
+  </div>
+
+  {# Agregar categoría #}
+  <div class="bg-white rounded-xl border border-gray-100 p-5">
+    <h3 class="font-medium text-gray-900 mb-4">Agregar categoría</h3>
+    <form method="post" action="{% url 'tournaments:add_category' complex.slug object.pk %}"
+          class="flex items-end gap-3">
+      {% csrf_token %}
+      <div class="flex-1">
+        <label class="block text-xs text-gray-500 mb-1">Nombre</label>
+        {{ category_form.name }}
+      </div>
+      <div class="w-32">
+        <label class="block text-xs text-gray-500 mb-1">Máx. equipos</label>
+        {{ category_form.max_teams }}
+      </div>
+      <button type="submit"
+              class="rounded-lg bg-primary-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-primary-700 transition">
+        Agregar
+      </button>
+    </form>
+  </div>
+
+  {# Categorías y fixture #}
+  {% for cat in categories %}
+  <div class="bg-white rounded-xl border border-gray-100 p-5">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="font-semibold text-gray-900">{{ cat.name }}</h3>
+      <div class="flex items-center gap-2">
+        <span class="text-xs text-gray-400">{{ cat.teams.count }} equipos</span>
+        <form method="post" action="{% url 'tournaments:generate_fixture' complex.slug object.pk cat.pk %}">
+          {% csrf_token %}
+          <button type="submit"
+                  class="rounded-lg border border-primary-200 px-3 py-1.5 text-xs font-medium text-primary-600 hover:bg-primary-50 transition">
+            Generar fixture
+          </button>
+        </form>
+      </div>
+    </div>
+
+    {# Inscribir equipo #}
+    <form method="post" action="{% url 'tournaments:add_team' complex.slug object.pk cat.pk %}"
+          class="flex items-end gap-3 mb-5 pb-5 border-b border-gray-50">
+      {% csrf_token %}
+      <div class="flex-1">
+        <label class="block text-xs text-gray-500 mb-1">Nombre del equipo</label>
+        <input type="text" name="name" required
+               class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500">
+      </div>
+      <input type="hidden" name="seed" value="0">
+      <button type="submit"
+              class="rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-700 transition">
+        Inscribir
+      </button>
+    </form>
+
+    {# Partidos #}
+    {% if cat.matches.all %}
+    <div class="space-y-2">
+      {% regroup cat.matches.all by round_number as rounds %}
+      {% for round in rounds %}
+    
+      <p class="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mt-5 mb-2 px-1">
+        Ronda {{ round.grouper }}
+      </p>
+    
+      {% for match in round.list %}
+      <div class="rounded-xl bg-white dark:bg-gray-900
+                    border border-gray-100 dark:border-gray-800">
+    
+        {# Equipos y marcador #}
+        <div class="flex items-center px-5 py-3 gap-4">
+          <span class="flex-1 text-right text-sm font-bold
+              {% if match.winner == match.team_a %}text-brand-600 dark:text-brand-400
+              {% else %}text-gray-800 dark:text-white{% endif %}">
+            {{ match.team_a.name|default:"BYE" }}
+          </span>
+    
+          {% if match.score_a is not None %}
+          <div class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg bg-gray-900 dark:bg-black flex-shrink-0">
+            <span class="text-white font-black text-sm w-4 text-center">{{ match.score_a }}</span>
+            <span class="text-gray-500 text-xs">—</span>
+            <span class="text-white font-black text-sm w-4 text-center">{{ match.score_b }}</span>
+          </div>
+          {% else %}
+          <div class="px-4 py-1.5 rounded-lg border border-dashed border-gray-200 dark:border-gray-700 flex-shrink-0">
+            <span class="text-gray-300 dark:text-gray-600 text-xs font-mono">vs</span>
+          </div>
+          {% endif %}
+    
+          <span class="flex-1 text-sm font-bold
+              {% if match.winner == match.team_b %}text-brand-600 dark:text-brand-400
+              {% else %}text-gray-800 dark:text-white{% endif %}">
+            {{ match.team_b.name|default:"BYE" }}
+          </span>
+        </div>
+    
+        {# Cargar resultado #}
+        <form method="post" action="{% url 'tournaments:match_result' complex.slug object.pk match.pk %}" class="flex items-center gap-2 px-5 py-2
+                       bg-gray-50 dark:bg-gray-800/40
+                       border-t border-gray-100 dark:border-gray-800">
+          {% csrf_token %}
+          <span class="text-xs text-gray-400 dark:text-gray-500 flex-shrink-0 w-16">Resultado</span>
+          <input type="number" name="score_a" min="0" value="{{ match.score_a|default:'' }}" placeholder="0" class="w-14 rounded-lg border border-gray-200 dark:border-gray-700
+                          bg-white dark:bg-gray-900 text-gray-900 dark:text-white
+                          px-2 py-1 text-sm text-center font-bold
+                          focus:outline-none focus:ring-2 focus:ring-brand-500 transition">
+          <span class="text-gray-300 dark:text-gray-600 text-xs">—</span>
+          <input type="number" name="score_b" min="0" value="{{ match.score_b|default:'' }}" placeholder="0" class="w-14 rounded-lg border border-gray-200 dark:border-gray-700
+                          bg-white dark:bg-gray-900 text-gray-900 dark:text-white
+                          px-2 py-1 text-sm text-center font-bold
+                          focus:outline-none focus:ring-2 focus:ring-brand-500 transition">
+          <input type="hidden" name="winner" value="">
+          <input type="hidden" name="status" value="FINISHED">
+          <input type="hidden" name="notes" value="">
+          <button type="submit" class="ml-auto flex-shrink-0 rounded-lg bg-brand-600 hover:bg-brand-700
+                           px-4 py-1 text-xs font-bold text-white transition
+                           focus:outline-none focus:ring-2 focus:ring-brand-500">
+            Guardar
+          </button>
+        </form>
+      </div>
+      {% endfor %}
+    
+      {% endfor %}
+    </div>
+    {% else %}
+    <p class="text-sm text-gray-400 dark:text-gray-500 text-center py-6">
+      Inscribí equipos y generá el fixture.
+    </p>
+    {% endif %}
+    </div>
+    {% endfor %}
+
+</div>
+{% endblock %}

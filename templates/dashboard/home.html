@@ -1,43 +1,58 @@
 {% extends "layouts/app.html" %}
 
 {% block page_title %}Dashboard{% endblock %}
+{% block subtitle_text %}{{ today|date:"l d \d\e F, Y" }}{% endblock %}
 
 {% block content %}
 
-{# ── Stats cards ── #}
-<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+{# Stats cards #}
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4 mb-6">
   {% for stat in stats %}
-  <div class="bg-white rounded-xl border border-gray-100 p-5">
-    <p class="text-sm text-gray-500 font-medium mb-1">{{ stat.label }}</p>
-    <p class="text-2xl font-bold text-gray-900">
-      {% if stat.prefix %}{{ stat.prefix }}{% endif %}{{ stat.value }}
+  <div class="relative overflow-hidden rounded-2xl bg-white dark:bg-gray-900
+              border border-gray-100 dark:border-gray-800 p-4 lg:p-5">
+    <p class="text-xs font-medium text-gray-400 dark:text-gray-500 mb-1">{{ stat.label }}</p>
+    <p class="text-2xl lg:text-3xl font-black text-gray-900 dark:text-white">
+      {% if stat.prefix %}
+        <span class="text-lg font-semibold text-gray-400 dark:text-gray-500">{{ stat.prefix }}</span>
+      {% endif %}
+      {{ stat.value }}
     </p>
+    {# Decoración de fondo #}
+    <div class="absolute -right-4 -bottom-4 w-20 h-20 rounded-full
+      {% if stat.color == 'blue' %}bg-brand-500/5
+      {% elif stat.color == 'green' %}bg-emerald-500/5
+      {% elif stat.color == 'purple' %}bg-accent-500/5
+      {% else %}bg-amber-500/5{% endif %}">
+    </div>
   </div>
   {% endfor %}
 </div>
 
-{# ── Complejos (solo admin de complejo) ── #}
+{# Complejos (solo admin) #}
 {% if role == "complex_admin" and my_complexes %}
-<div class="mb-8">
-  <h2 class="text-sm font-medium text-gray-500 uppercase tracking-wide mb-3">
+<div class="mb-6">
+  <h2 class="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-3">
     Mis complejos
   </h2>
-  <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+  <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
     {% for c in my_complexes %}
     <a href="{% url 'complexes:detail' c.slug %}"
-       class="bg-white rounded-xl border border-gray-100 p-4 hover:shadow-sm transition flex items-center gap-4">
-      <div class="w-10 h-10 rounded-lg bg-primary-100 flex items-center justify-center flex-shrink-0">
-        <span class="text-primary-700 font-bold">{{ c.name|first|upper }}</span>
+       class="flex items-center gap-3 rounded-2xl bg-white dark:bg-gray-900
+              border border-gray-100 dark:border-gray-800
+              p-4 hover:border-brand-200 dark:hover:border-brand-500/30
+              hover:shadow-sm transition group">
+      <div class="w-10 h-10 rounded-xl bg-gradient-brand flex items-center justify-center flex-shrink-0 shadow-sm">
+        <span class="text-white font-black text-sm">{{ c.name|first|upper }}</span>
       </div>
       <div class="flex-1 min-w-0">
-        <p class="font-medium text-gray-900 truncate">{{ c.name }}</p>
-        <p class="text-xs text-gray-400 mt-0.5">
-          {{ c.total_courts }} cancha{{ c.total_courts|pluralize }}
+        <p class="font-semibold text-gray-900 dark:text-white text-sm truncate group-hover:text-brand-600 dark:group-hover:text-brand-400 transition">
+          {{ c.name }}
         </p>
+        <p class="text-xs text-gray-400 dark:text-gray-500">{{ c.total_courts }} canchas</p>
       </div>
-      <span class="text-xs px-2 py-0.5 rounded-full
-        {% if c.status == 'ACTIVE' %}bg-green-50 text-green-700
-        {% else %}bg-yellow-50 text-yellow-700{% endif %}">
+      <span class="text-xs px-2 py-0.5 rounded-full font-medium flex-shrink-0
+        {% if c.status == 'ACTIVE' %}bg-emerald-500/10 text-emerald-600 dark:text-emerald-400
+        {% else %}bg-amber-500/10 text-amber-600 dark:text-amber-400{% endif %}">
         {{ c.get_status_display }}
       </span>
     </a>
@@ -46,62 +61,89 @@
 </div>
 {% endif %}
 
-{# ── Reservas recientes ── #}
+{# Reservas recientes #}
 <div>
   <div class="flex items-center justify-between mb-3">
-    <h2 class="text-sm font-medium text-gray-500 uppercase tracking-wide">
+    <h2 class="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">
       Reservas recientes
     </h2>
     <a href="{% url 'reservations:list' %}"
-       class="text-sm text-primary-600 hover:text-primary-700 font-medium">
+       class="text-xs font-semibold text-brand-600 dark:text-brand-400 hover:text-brand-700 transition">
       Ver todas →
     </a>
   </div>
 
   {% if recent_reservations %}
-  <div class="bg-white rounded-xl border border-gray-100 overflow-hidden">
+
+  {# Mobile: cards #}
+  <div class="lg:hidden space-y-3">
+    {% for r in recent_reservations %}
+    <a href="{% url 'reservations:detail' r.pk %}"
+       class="block rounded-2xl bg-white dark:bg-gray-900
+              border border-gray-100 dark:border-gray-800 p-4">
+      <div class="flex items-start justify-between mb-2">
+        <div>
+          <p class="font-semibold text-gray-900 dark:text-white text-sm">{{ r.court.name }}</p>
+          <p class="text-xs text-gray-400 dark:text-gray-500">{{ r.court.complex.name }}</p>
+        </div>
+        <span class="text-xs px-2 py-0.5 rounded-full font-medium
+          {% if r.status == 'CONFIRMED' %}bg-emerald-500/10 text-emerald-600 dark:text-emerald-400
+          {% elif r.status == 'CANCELLED' %}bg-red-500/10 text-red-500
+          {% else %}bg-amber-500/10 text-amber-600 dark:text-amber-400{% endif %}">
+          {{ r.get_status_display }}
+        </span>
+      </div>
+      <div class="flex items-center justify-between text-xs text-gray-400 dark:text-gray-500">
+        <span>{{ r.date|date:"d/m/Y" }} · {{ r.start_time|time:"H:i" }}–{{ r.end_time|time:"H:i" }}</span>
+        <span class="font-semibold text-gray-900 dark:text-white">${{ r.total_amount }}</span>
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+
+  {# Desktop: tabla #}
+  <div class="hidden lg:block rounded-2xl bg-white dark:bg-gray-900
+              border border-gray-100 dark:border-gray-800 overflow-hidden">
     <table class="w-full text-sm">
       <thead>
-        <tr class="border-b border-gray-100 bg-gray-50">
-          <th class="text-left px-5 py-3 font-medium text-gray-500">Cancha</th>
+        <tr class="border-b border-gray-100 dark:border-gray-800">
+          <th class="text-left px-5 py-3 text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide">Cancha</th>
           {% if role != "end_user" %}
-          <th class="text-left px-5 py-3 font-medium text-gray-500">Usuario</th>
+          <th class="text-left px-5 py-3 text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide">Usuario</th>
           {% endif %}
-          <th class="text-left px-5 py-3 font-medium text-gray-500">Fecha</th>
-          <th class="text-left px-5 py-3 font-medium text-gray-500">Horario</th>
-          <th class="text-left px-5 py-3 font-medium text-gray-500">Total</th>
-          <th class="text-left px-5 py-3 font-medium text-gray-500">Estado</th>
+          <th class="text-left px-5 py-3 text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide">Fecha</th>
+          <th class="text-left px-5 py-3 text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide">Horario</th>
+          <th class="text-left px-5 py-3 text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide">Total</th>
+          <th class="text-left px-5 py-3 text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide">Estado</th>
           <th class="px-5 py-3"></th>
         </tr>
       </thead>
-      <tbody class="divide-y divide-gray-50">
+      <tbody class="divide-y divide-gray-50 dark:divide-gray-800">
         {% for r in recent_reservations %}
-        <tr class="hover:bg-gray-50 transition">
-          <td class="px-5 py-3.5">
-            <p class="font-medium text-gray-900">{{ r.court.name }}</p>
-            <p class="text-xs text-gray-400">{{ r.court.complex.name }}</p>
+        <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition">
+          <td class="px-5 py-4">
+            <p class="font-semibold text-gray-900 dark:text-white text-sm">{{ r.court.name }}</p>
+            <p class="text-xs text-gray-400 dark:text-gray-500">{{ r.court.complex.name }}</p>
           </td>
           {% if role != "end_user" %}
-          <td class="px-5 py-3.5 text-gray-600 text-xs">{{ r.user.email }}</td>
+          <td class="px-5 py-4 text-xs text-gray-500 dark:text-gray-400">{{ r.user.email }}</td>
           {% endif %}
-          <td class="px-5 py-3.5 text-gray-600">{{ r.date|date:"d/m/Y" }}</td>
-          <td class="px-5 py-3.5 text-gray-600">
-            {{ r.start_time|time:"H:i" }} – {{ r.end_time|time:"H:i" }}
-          </td>
-          <td class="px-5 py-3.5 font-medium text-gray-900">${{ r.total_amount }}</td>
-          <td class="px-5 py-3.5">
-            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium
-              {% if r.status == 'CONFIRMED' %}bg-green-50 text-green-700
-              {% elif r.status == 'CANCELLED' %}bg-red-50 text-red-700
-              {% elif r.status == 'COMPLETED' %}bg-blue-50 text-blue-700
-              {% else %}bg-yellow-50 text-yellow-700{% endif %}">
+          <td class="px-5 py-4 text-sm text-gray-600 dark:text-gray-300">{{ r.date|date:"d/m/Y" }}</td>
+          <td class="px-5 py-4 text-sm text-gray-600 dark:text-gray-300">{{ r.start_time|time:"H:i" }} – {{ r.end_time|time:"H:i" }}</td>
+          <td class="px-5 py-4 font-bold text-gray-900 dark:text-white">${{ r.total_amount }}</td>
+          <td class="px-5 py-4">
+            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold
+              {% if r.status == 'CONFIRMED' %}bg-emerald-500/10 text-emerald-600 dark:text-emerald-400
+              {% elif r.status == 'CANCELLED' %}bg-red-500/10 text-red-500
+              {% elif r.status == 'COMPLETED' %}bg-brand-500/10 text-brand-600 dark:text-brand-400
+              {% else %}bg-amber-500/10 text-amber-600 dark:text-amber-400{% endif %}">
               {{ r.get_status_display }}
             </span>
           </td>
-          <td class="px-5 py-3.5 text-right">
+          <td class="px-5 py-4 text-right">
             <a href="{% url 'reservations:detail' r.pk %}"
-               class="text-primary-600 hover:text-primary-700 font-medium text-xs">
-              Ver
+               class="text-brand-600 dark:text-brand-400 hover:text-brand-700 font-semibold text-xs">
+              Ver →
             </a>
           </td>
         </tr>
@@ -111,10 +153,16 @@
   </div>
 
   {% else %}
-  <div class="bg-white rounded-xl border border-gray-100 p-10 text-center">
-    <p class="text-gray-400 text-sm">No hay reservas todavía.</p>
+  <div class="rounded-2xl bg-white dark:bg-gray-900 border border-dashed border-gray-200 dark:border-gray-700 p-10 text-center">
+    <div class="w-12 h-12 rounded-2xl bg-brand-50 dark:bg-brand-500/10 flex items-center justify-center mx-auto mb-3">
+      <svg class="w-6 h-6 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+              d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+      </svg>
+    </div>
+    <p class="text-gray-500 dark:text-gray-400 font-medium text-sm mb-1">No hay reservas todavía</p>
     <a href="{% url 'reservations:create' %}"
-       class="inline-block mt-3 text-sm font-medium text-primary-600 hover:text-primary-700">
+       class="inline-block mt-2 text-sm font-semibold text-brand-600 dark:text-brand-400 hover:text-brand-700 transition">
       Crear la primera →
     </a>
   </div>

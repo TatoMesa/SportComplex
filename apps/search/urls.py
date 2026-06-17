@@ -1,9 +1,9 @@
 from django.urls import path
-from django.contrib.auth.decorators import login_required
-from django.views.generic import TemplateView
+from . import views
 
 app_name = "search"
 
 urlpatterns = [
-    path("", login_required(TemplateView.as_view(template_name="coming_soon.html")), name="index"),
+    path("", views.SearchView.as_view(), name="index"),
+    path("favorito/<slug:slug>/", views.ToggleFavoriteView.as_view(), name="toggle_favorite"),
 ]

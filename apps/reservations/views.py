@@ -70,6 +70,14 @@ class ReservationCreateView(LoginRequiredMixin, CreateView):
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
         kwargs["complex"] = self.complex
+        # Pasar parámetros GET al form para preseleccionar
+        if self.request.method == "GET":
+            kwargs["initial_data"] = {
+                "court": self.request.GET.get("court"),
+                "date": self.request.GET.get("date"),
+                "start_time": self.request.GET.get("start_time"),
+                "end_time": self.request.GET.get("end_time"),
+            }
         return kwargs
 
     def form_valid(self, form):
