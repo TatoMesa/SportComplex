@@ -101,8 +101,11 @@ class CourtCreateView(LoginRequiredMixin, CreateView):
         return super().dispatch(request, *args, **kwargs)
 
     def form_valid(self, form):
-        form.instance.complex = self.complex
-        messages.success(self.request, "Cancha agregada correctamente.")
+        form.instance.owner = self.request.user
+        # Admin de complejo activa directo, superadmin deja en PENDING para revisión
+        if self.request.user.is_complex_admin:
+            form.instance.status = "ACTIVE"
+        messages.success(self.request, "Complejo creado correctamente.")
         return super().form_valid(form)
 
     def get_success_url(self):

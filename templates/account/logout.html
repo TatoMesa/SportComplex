@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Cerrar sesión — SportComplex{% endblock %}
+
+{% block body %}
+<div class="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-950 px-4">
+  <div class="w-full max-w-sm text-center">
+
+    <div class="w-16 h-16 rounded-2xl bg-gradient-brand flex items-center justify-center mx-auto mb-6 shadow-lg shadow-brand-500/30">
+      <span class="text-white font-black text-2xl">SC</span>
+    </div>
+
+    <h2 class="text-2xl font-black text-gray-900 dark:text-white mb-2">¿Cerrás sesión?</h2>
+    <p class="text-sm text-gray-400 dark:text-gray-500 mb-8">Podés volver a ingresar cuando quieras.</p>
+
+    <form method="post" action="{% url 'account_logout' %}">
+      {% csrf_token %}
+      <button type="submit"
+              class="w-full rounded-xl bg-gradient-brand px-4 py-3 text-sm font-bold
+                     text-white shadow-lg shadow-brand-500/25
+                     hover:shadow-brand-500/40 hover:scale-[1.01]
+                     focus:outline-none focus:ring-2 focus:ring-brand-500
+                     transition-all duration-200 mb-3">
+        Sí, cerrar sesión
+      </button>
+    </form>
+
+    <a href="{% url 'dashboard:home' %}"
+       class="block w-full rounded-xl border border-gray-200 dark:border-gray-700
+              px-4 py-3 text-sm font-semibold text-gray-600 dark:text-gray-300
+              hover:bg-gray-50 dark:hover:bg-gray-800 transition">
+      Cancelar
+    </a>
+
+  </div>
+</div>
+{% endblock %}
