@@ -1,0 +1,76 @@
+{% extends "layouts/app.html" %}
+
+{% block page_title %}Editar perfil{% endblock %}
+
+{% block content %}
+<div class="max-w-lg">
+  <form method="post" enctype="multipart/form-data" class="space-y-5">
+    {% csrf_token %}
+
+    <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-6 space-y-5">
+      <h3 class="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">
+        Datos personales
+      </h3>
+
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Nombre</label>
+          {{ user_form.first_name }}
+        </div>
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Apellido</label>
+          {{ user_form.last_name }}
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Teléfono</label>
+        {{ profile_form.phone }}
+      </div>
+
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Fecha de nacimiento</label>
+        {{ profile_form.birth_date }}
+      </div>
+
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Bio</label>
+        {{ profile_form.bio }}
+      </div>
+    </div>
+
+    <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-6 space-y-4">
+      <h3 class="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">
+        Foto de perfil
+      </h3>
+
+      {% if user.profile.avatar %}
+        <div class="flex items-center gap-4">
+          <img src="{{ user.profile.avatar.url }}"
+               class="w-16 h-16 rounded-2xl object-cover border border-gray-100 dark:border-gray-700">
+          <p class="text-xs text-gray-400 dark:text-gray-500">Foto actual. Subí una nueva para reemplazarla.</p>
+        </div>
+      {% endif %}
+
+      {{ profile_form.avatar }}
+    </div>
+
+    <div class="flex items-center gap-3">
+      <button type="submit"
+              class="rounded-xl bg-gradient-brand px-6 py-2.5 text-sm font-bold text-white
+                     shadow-lg shadow-brand-500/25 hover:shadow-brand-500/40
+                     hover:scale-[1.01] transition-all duration-200
+                     focus:outline-none focus:ring-2 focus:ring-brand-500">
+        Guardar cambios
+      </button>
+      <a href="{% url 'accounts:profile' %}"
+         class="rounded-xl border border-gray-200 dark:border-gray-700 px-5 py-2.5
+                text-sm font-semibold text-gray-600 dark:text-gray-300
+                hover:bg-gray-50 dark:hover:bg-gray-800 transition">
+        Cancelar
+      </a>
+    </div>
+
+  </form>
+</div>
+{% endblock %}

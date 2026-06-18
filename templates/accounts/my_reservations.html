@@ -1,0 +1,131 @@
+{% extends "layouts/app.html" %}
+
+{% block page_title %}Mis reservas{% endblock %}
+
+{% block header_actions %}
+  <a href="{% url 'reservations:create' %}"
+     class="inline-flex items-center gap-2 rounded-xl bg-gradient-brand px-4 py-2
+            text-sm font-bold text-white shadow-sm shadow-brand-500/20
+            hover:shadow-brand-500/40 hover:scale-[1.01] transition-all">
+    + Nueva reserva
+  </a>
+{% endblock %}
+
+{% block content %}
+
+{# Filtro #}
+<div class="flex items-center gap-3 mb-5">
+  <form method="get" class="flex items-center gap-2">
+    <select name="status"
+            onchange="this.form.submit()"
+            class="rounded-xl border border-gray-200 dark:border-gray-700
+                   bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300
+                   px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 transition">
+      <option value="">Todos los estados</option>
+      {% for value, label in status_choices %}
+        <option value="{{ value }}" {% if selected_status == value %}selected{% endif %}>
+          {{ label }}
+        </option>
+      {% endfor %}
+    </select>
+  </form>
+  {% if selected_status %}
+    <a href="{% url 'accounts:my_reservations' %}"
+       class="text-xs text-gray-400 dark:text-gray-500 hover:text-gray-600 transition">
+      Limpiar
+    </a>
+  {% endif %}
+</div>
+
+{% if reservations %}
+<div class="space-y-3">
+  {% for r in reservations %}
+  <a href="{% url 'reservations:detail' r.pk %}"
+     class="flex items-center gap-4
+            bg-white dark:bg-gray-900
+            rounded-2xl border border-gray-100 dark:border-gray-800
+            p-4 hover:border-brand-200 dark:hover:border-brand-500/30
+            hover:shadow-sm transition group">
+
+    {# Ícono deporte #}
+    <div class="w-12 h-12 rounded-xl bg-brand-50 dark:bg-brand-500/10
+                flex items-center justify-center flex-shrink-0">
+      <span class="text-2xl">
+        {% if r.court.sport.name == "Pádel" %}🏓
+        {% elif r.court.sport.name == "Tenis" %}🎾
+        {% elif "Fútbol" in r.court.sport.name %}⚽
+        {% elif r.court.sport.name == "Hockey" %}🏑
+        {% elif r.court.sport.name == "Básquet" %}🏀
+        {% else %}🏅{% endif %}
+      </span>
+    </div>
+
+    {# Info #}
+    <div class="flex-1 min-w-0">
+      <p class="font-bold text-gray-900 dark:text-white text-sm truncate
+                group-hover:text-brand-600 dark:group-hover:text-brand-400 transition">
+        {{ r.court.name }}
+      </p>
+      <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
+        {{ r.court.complex.name }}
+      </p>
+      <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+        📅 {{ r.date|date:"d/m/Y" }} &nbsp;·&nbsp;
+        🕐 {{ r.start_time|time:"H:i" }} – {{ r.end_time|time:"H:i" }}
+      </p>
+    </div>
+
+    {# Estado y precio #}
+    <div class="flex-shrink-0 text-right">
+      <p class="font-black text-gray-900 dark:text-white">${{ r.total_amount }}</p>
+      <span class="inline-flex mt-1 items-center px-2 py-0.5 rounded-full text-[10px] font-bold
+        {% if r.status == 'CONFIRMED' %}bg-emerald-500/10 text-emerald-500
+        {% elif r.status == 'CANCELLED' %}bg-red-500/10 text-red-400
+        {% elif r.status == 'COMPLETED' %}bg-brand-500/10 text-brand-500
+        {% else %}bg-amber-500/10 text-amber-500{% endif %}">
+        {{ r.get_status_display }}
+      </span>
+    </div>
+
+  </a>
+  {% endfor %}
+</div>
+
+{# Paginación #}
+{% if is_paginated %}
+<div class="flex items-center justify-center gap-2 mt-6">
+  {% if page_obj.has_previous %}
+    <a href="?page={{ page_obj.previous_page_number }}{% if selected_status %}&status={{ selected_status }}{% endif %}"
+       class="px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-700 text-sm
+              hover:bg-gray-50 dark:hover:bg-gray-800 transition">←</a>
+  {% endif %}
+  <span class="text-sm text-gray-400 dark:text-gray-500">
+    {{ page_obj.number }} / {{ page_obj.num_pages }}
+  </span>
+  {% if page_obj.has_next %}
+    <a href="?page={{ page_obj.next_page_number }}{% if selected_status %}&status={{ selected_status }}{% endif %}"
+       class="px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-700 text-sm
+              hover:bg-gray-50 dark:hover:bg-gray-800 transition">→</a>
+  {% endif %}
+</div>
+{% endif %}
+
+{% else %}
+<div class="rounded-2xl bg-white dark:bg-gray-900
+            border border-dashed border-gray-200 dark:border-gray-700
+            p-12 text-center">
+  <span class="text-5xl block mb-4">📅</span>
+  <p class="font-bold text-gray-900 dark:text-white mb-1">No hay reservas</p>
+  <p class="text-sm text-gray-400 dark:text-gray-500 mb-4">
+    {% if selected_status %}Probá con otro filtro.{% else %}Todavía no hiciste ninguna reserva.{% endif %}
+  </p>
+  <a href="{% url 'search:index' %}"
+     class="inline-flex items-center gap-2 rounded-xl bg-gradient-brand px-5 py-2.5
+            text-sm font-bold text-white shadow-lg shadow-brand-500/25
+            hover:shadow-brand-500/40 transition">
+    Buscar canchas
+  </a>
+</div>
+{% endif %}
+
+{% endblock %}
